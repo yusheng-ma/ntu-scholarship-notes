@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "臺大獎學金備註助手",
+  "version": "1.0",
+  "description": "在獎學金表格新增備註欄位，方便記錄申請狀態。",
+  "content_scripts": [
+    {
+      "matches": ["https://advisory.ntu.edu.tw/CMS/Scholarship*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "permissions": ["storage"]
+}
