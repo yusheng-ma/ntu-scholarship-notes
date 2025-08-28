@@ -65,23 +65,19 @@ function addRemarksColumn() {
       const scholarshipId = tr.id; // 例如 "7747"
       const noteKey = 'scholarship_note_' + scholarshipId;
 
+      // 標記是否從「備註欄」開始 mousedown
+      let isDraggingFromNote = false;
+
       // 建立 td（備註欄）
       const td = document.createElement('td');
 
-      // ✅ 重點：在整個 td 上阻止事件冒泡（避免點空白處誤觸跳轉）
-      ['click', 'mousedown', 'mouseup'].forEach(event => {
-        td.addEventListener(event, function (e) {
-          e.stopPropagation();
-        });
+      // 當在備註欄 mousedown，設置標記
+      td.addEventListener('mousedown', function (event) {
+        isDraggingFromNote = true;
+        event.stopPropagation();
       });
 
-      // 樣式設定
-      td.style.padding = '4px';
-      td.style.verticalAlign = 'middle';
-      td.style.cursor = 'text'; // 提示這是可編輯區域
-      td.title = '可輸入個人備註，例如：v看過了、x不能申請、OK要申請';
-
-      // 建立 input
+      // input 同樣處理
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = '例如：v看過了, x不能申請, OK要申請';
@@ -91,6 +87,22 @@ function addRemarksColumn() {
       input.style.border = '1px solid #ccc';
       input.style.borderRadius = '4px';
       input.style.boxSizing = 'border-box';
+      input.style.outline = '2px solid transparent';
+      input.style.transition = 'outline 0.1s';
+
+      // input focus 時顯示提示外框
+      input.addEventListener('focus', () => {
+        input.style.outline = '2px solid #2196F3';
+      });
+      input.addEventListener('blur', () => {
+        input.style.outline = '2px solid transparent';
+      });
+
+      // input mousedown 也要標記
+      input.addEventListener('mousedown', function (event) {
+        isDraggingFromNote = true;
+        event.stopPropagation();
+      });
 
       // 還原儲存的內容
       if (savedNotes[noteKey]) {
@@ -106,12 +118,38 @@ function addRemarksColumn() {
         });
       });
 
-      // 雙重保險：input 本身也阻止冒泡
+      // 阻止事件冒泡（雙重保險）
       ['click', 'mousedown', 'mouseup'].forEach(event => {
         input.addEventListener(event, function (e) {
           e.stopPropagation();
         });
+        td.addEventListener(event, function (e) {
+          e.stopPropagation();
+        });
       });
+
+      // ✅ 在 tr 上攔截 click：如果是從備註欄拖曳而來，則阻止跳轉
+      tr.addEventListener('click', function (event) {
+        if (isDraggingFromNote) {
+          event.stopPropagation();
+          event.preventDefault();
+          console.log('[NTU Notes] 阻止因拖曳產生的誤觸跳轉');
+          return false;
+        }
+      }, true); // 使用 capture 階段，優先處理
+
+      // 重置標記（mouseup 後）
+      document.addEventListener('mouseup', function () {
+        setTimeout(() => {
+          isDraggingFromNote = false;
+        }, 0);
+      });
+
+      // 樣式設定
+      td.style.padding = '4px';
+      td.style.verticalAlign = 'middle';
+      td.style.cursor = 'text';
+      td.title = '可輸入個人備註，例如：v看過了、x不能申請、OK要申請';
 
       // 插入元素
       td.appendChild(input);
