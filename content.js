@@ -56,21 +56,30 @@ if (window.hasRunNtuScholarshipNotes) {
 
     // 為每一列新增輸入框
     const rows = tbody.querySelectorAll('.tr_data');
-    console.log(`[NTU Notes] 找到 ${rows.length} 列資料`);
-
     rows.forEach((tr) => {
-      const td = document.createElement('td');
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = '例如：v看過了, x不能申請, OK要申請';
-      input.style.width = '90%';
-      input.style.padding = '4px';
-      input.style.fontSize = '14px';
-      input.style.border = '1px solid #ccc';
-      input.style.borderRadius = '4px';
-      input.style.boxSizing = 'border-box';
-      td.appendChild(input);
-      tr.appendChild(td);
+    const td = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = '例如：v看過了, x不能申請, OK要申請';
+    input.style.width = '90%';
+    input.style.padding = '4px';
+    input.style.fontSize = '14px';
+    input.style.border = '1px solid #ccc';
+    input.style.borderRadius = '4px';
+    input.style.boxSizing = 'border-box';
+
+    // 🔴 新增：阻止點擊事件向上冒泡
+    input.addEventListener('click', function (event) {
+        event.stopPropagation(); // 阻止事件傳到 tr
+    });
+
+    // 可選：防止其他事件（如 dblclick）
+    input.addEventListener('mousedown', function (event) {
+        event.stopPropagation();
+    });
+
+    td.appendChild(input);
+    tr.appendChild(td);
     });
 
     console.log(`[NTU Notes] ✅ 成功為 ${rows.length} 列新增輸入框！`);
