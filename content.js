@@ -39,6 +39,7 @@ if (window.hasRunNtuScholarshipNotes) {
       return;
     }
 
+    // 檢查是否已有「備註」欄
     const lastHeader = headerRow.querySelector('td:last-child');
     if (lastHeader && lastHeader.textContent.trim() === '備註') {
       console.log('[NTU Notes] ✅ 備註欄已存在');
@@ -54,34 +55,48 @@ if (window.hasRunNtuScholarshipNotes) {
     headerRow.appendChild(th);
     console.log('[NTU Notes] ✅ 已新增「備註」標題');
 
-    // 為每一列新增輸入框
-    const rows = tbody.querySelectorAll('.tr_data');
-    rows.forEach((tr) => {
-    const td = document.createElement('td');
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = '例如：v看過了, x不能申請, OK要申請';
-    input.style.width = '90%';
-    input.style.padding = '4px';
-    input.style.fontSize = '14px';
-    input.style.border = '1px solid #ccc';
-    input.style.borderRadius = '4px';
-    input.style.boxSizing = 'border-box';
+    // ✅ 讀取所有已儲存的備註
+    chrome.storage.local.get(null, function (savedNotes) {
+      console.log('[NTU Notes] 已載入儲存的備註:', savedNotes);
 
-    // 🔴 新增：阻止點擊事件向上冒泡
-    input.addEventListener('click', function (event) {
-        event.stopPropagation(); // 阻止事件傳到 tr
+      const rows = tbody.querySelectorAll('.tr_data');
+      rows.forEach((tr) => {
+        const scholarshipId = tr.id; // 例如 "7747"
+        const noteKey = 'scholarship_note_' + scholarshipId;
+
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = '例如：v看過了, x不能申請, OK要申請';
+        input.style.width = '90%';
+        input.style.padding = '4px';
+        input.style.fontSize = '14px';
+        input.style.border = '1px solid #ccc';
+        input.style.borderRadius = '4px';
+        input.style.boxSizing = 'border-box';
+
+        // ✅ 如果有儲存過，就還原內容
+        if (savedNotes[noteKey]) {
+          input.value = savedNotes[noteKey];
+        }
+
+        // ✅ 當使用者輸入時，自動儲存
+        input.addEventListener('input', function () {
+          const data = {};
+          data[noteKey] = input.value;
+          chrome.storage.local.set(data, function () {
+            console.log(`[NTU Notes] 已儲存獎學金 ${scholarshipId} 的備註:`, input.value);
+          });
+        });
+
+        // ✅ 阻止事件冒泡（點擊不跳轉）
+        input.addEventListener('click', function (event) {
+          event.stopPropagation();
+        });
+
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
     });
-
-    // 可選：防止其他事件（如 dblclick）
-    input.addEventListener('mousedown', function (event) {
-        event.stopPropagation();
-    });
-
-    td.appendChild(input);
-    tr.appendChild(td);
-    });
-
-    console.log(`[NTU Notes] ✅ 成功為 ${rows.length} 列新增輸入框！`);
   }
 }
